@@ -1,0 +1,14 @@
+<!--
+  In lines ko android/app/src/main/AndroidManifest.xml me add karein
+  (flutter create chalane ke BAAD).
+-->
+
+<!-- <manifest> tag ke andar, <application> se PEHLE: -->
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+<!-- Driver app background me GPS ping karti hai jab online ho: -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+<!-- Local HTTP test ke liye <application> me: -->
+<!-- android:usesCleartextTraffic="true" -->

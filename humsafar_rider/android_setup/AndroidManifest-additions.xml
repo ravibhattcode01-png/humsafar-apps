@@ -1,0 +1,13 @@
+<!--
+  In lines ko android/app/src/main/AndroidManifest.xml me add karein
+  (flutter create chalane ke BAAD).
+-->
+
+<!-- <manifest> tag ke andar, <application> se PEHLE: -->
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+<!-- Agar local HTTP server (http://) se test kar rahe hain to
+     <application> tag me ye attribute add karein: -->
+<!-- android:usesCleartextTraffic="true" -->
