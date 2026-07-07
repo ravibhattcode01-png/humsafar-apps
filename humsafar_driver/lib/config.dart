@@ -3,7 +3,6 @@ class AppConfig {
   /// Laravel backend base URL (bina trailing slash).
   /// Local test:  http://10.0.2.2:8000
   /// Production:  https://api.humsafar.app
-
   static const String baseUrl = 'https://humsafar.ngie.in';
 
   static const String apiUrl = '$baseUrl/api/v1';
