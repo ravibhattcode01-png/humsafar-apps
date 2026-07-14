@@ -666,10 +666,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ])
               else
                 Row(children: [
-                  const Icon(Icons.local_offer, color: green, size: 16),
+                  Icon(Icons.local_offer, color: green, size: 16),
                   const SizedBox(width: 6),
                   Text('$_appliedPromo — ₹${_discount.round()} chhoot',
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: green, fontWeight: FontWeight.w600, fontSize: 13)),
                   const Spacer(),
                   TextButton(
