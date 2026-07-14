@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../config.dart';
 import '../services/api.dart';
 import '../services/geo_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RideScreen extends StatefulWidget {
   final int rideId;
@@ -148,6 +149,22 @@ class _RideScreenState extends State<RideScreen> {
       } catch (e) {
         _snack(e.toString());
       }
+    }
+  }
+
+  Future<void> _callDriver(String? phone) async {
+    if (phone == null || phone.isEmpty) return;
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  Future<void> _openInvoice() async {
+    try {
+      final r = await Api.I.invoiceUrl(widget.rideId);
+      final uri = Uri.parse(r['url'] as String);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      _snack(e.toString());
     }
   }
 
@@ -329,6 +346,15 @@ class _RideScreenState extends State<RideScreen> {
                                         color: Colors.black54)),
                               ]),
                         ),
+                        IconButton(
+                          onPressed: () =>
+                              _callDriver(driver['phone']?.toString()),
+                          icon: const Icon(Icons.call, color: green),
+                          style: IconButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(color: green)),
+                        ),
+                        const SizedBox(width: 6),
                         if (status != 'ongoing')
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -366,6 +392,17 @@ class _RideScreenState extends State<RideScreen> {
                     ElevatedButton(
                         onPressed: _rate,
                         child: const Text('⭐ Driver ko Rate Karein')),
+                  if (status == 'completed')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: OutlinedButton.icon(
+                        onPressed: _openInvoice,
+                        icon: const Icon(Icons.receipt_long, size: 18),
+                        label: const Text('Invoice Dekhein / Download'),
+                        style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(46)),
+                      ),
+                    ),
                   if (status == 'completed' || status == 'cancelled')
                     TextButton(
                         onPressed: () => Navigator.pop(context),

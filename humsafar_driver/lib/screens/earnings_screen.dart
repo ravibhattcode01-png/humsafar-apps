@@ -11,6 +11,7 @@ class EarningsScreen extends StatefulWidget {
 class _EarningsScreenState extends State<EarningsScreen> {
   Map<String, dynamic>? _earnings;
   List<dynamic> _txns = [];
+  List<dynamic> _incentives = [];
 
   @override
   void initState() {
@@ -22,9 +23,15 @@ class _EarningsScreenState extends State<EarningsScreen> {
     try {
       final e = await Api.I.earnings();
       final w = await Api.I.wallet();
+      List<dynamic> inc = [];
+      try {
+        final r = await Api.I.incentives();
+        inc = r['incentives'] as List<dynamic>;
+      } catch (_) {}
       setState(() {
         _earnings = e;
         _txns = w['transactions'] as List<dynamic>;
+        _incentives = inc;
       });
     } catch (_) {}
   }
@@ -73,6 +80,63 @@ class _EarningsScreenState extends State<EarningsScreen> {
                                 color: Colors.white60, fontSize: 11)),
                       ]),
                 ),
+                if (_incentives.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  const Text('🎯 Bonus Targets',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  ..._incentives.map((i) {
+                    final m = i as Map<String, dynamic>;
+                    final done = (m['done'] as num).toInt();
+                    final target = (m['target'] as num).toInt();
+                    final claimed = m['claimed'] == true;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: claimed
+                            ? green.withOpacity(0.08)
+                            : Colors.grey.shade50,
+                        border: Border.all(
+                            color: claimed ? green : Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(children: [
+                              Expanded(
+                                  child: Text(m['title'] as String,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13))),
+                              Text(
+                                  claimed
+                                      ? '✅ ₹${(m['bonus'] as num).round()} mila!'
+                                      : '₹${(m['bonus'] as num).round()}',
+                                  style: TextStyle(
+                                      color: green,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13)),
+                            ]),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: target > 0 ? done / target : 0,
+                                minHeight: 6,
+                                backgroundColor: Colors.grey.shade200,
+                                color: green,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('$done / $target rides (${m['period']})',
+                                style: const TextStyle(
+                                    fontSize: 11, color: Colors.black45)),
+                          ]),
+                    );
+                  }),
+                ],
                 const SizedBox(height: 16),
                 const Text('Recent Transactions',
                     style: TextStyle(fontWeight: FontWeight.w600)),

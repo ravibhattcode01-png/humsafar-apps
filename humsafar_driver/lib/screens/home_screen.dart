@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _pollTimer;
   Timer? _gpsTimer;
   bool _busy = false;
+  String? _loadError;
 
   @override
   void initState() {
@@ -37,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loadError = null);
     try {
       final p = await Api.I.profile();
       final e = await Api.I.earnings();
@@ -47,7 +49,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _earnings = e;
       });
       if (_online) _startPolling();
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) setState(() => _loadError = e.toString());
+    }
   }
 
   Future<Position?> _position() async {
@@ -146,7 +150,40 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     const green = Color(AppConfig.brandGreen);
     if (_profile == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: _loadError == null
+              ? const CircularProgressIndicator()
+              : Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.cloud_off,
+                            size: 56, color: Colors.black26),
+                        const SizedBox(height: 12),
+                        Text(_loadError!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.black54)),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                            onPressed: _load,
+                            child: const Text('Dobara Try Karein')),
+                        TextButton(
+                            onPressed: () async {
+                              await Api.I.logout();
+                              if (!context.mounted) return;
+                              Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const LoginScreen()),
+                                  (_) => false);
+                            },
+                            child: const Text('Logout')),
+                      ]),
+                ),
+        ),
+      );
     }
 
     final status = _profile!['status'] as String? ?? 'pending';

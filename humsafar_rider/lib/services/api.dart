@@ -130,6 +130,26 @@ class Api {
 
   Future<Map<String, dynamic>> wallet() => get('/wallet');
 
+  Future<Map<String, dynamic>> validatePromo(String code, double fare) =>
+      post('/rider/promo/validate', {'code': code, 'fare': fare});
+
+  Future<Map<String, dynamic>> invoiceUrl(int rideId) =>
+      get('/rider/rides/$rideId/invoice');
+
+  Future<Map<String, dynamic>> referral() => get('/referral');
+
+  Future<Map<String, dynamic>> applyReferral(String code) =>
+      post('/referral/apply', {'code': code});
+
+  Future<Map<String, dynamic>> favourites() => get('/rider/favourites');
+
+  Future<Map<String, dynamic>> addFavourite(
+          String label, String address, double lat, double lng) =>
+      post('/rider/favourites',
+          {'label': label, 'address': address, 'lat': lat, 'lng': lng});
+
+  Future<void> deleteFavourite(int id) => delete('/rider/favourites/$id');
+
   Future<void> sos({int? rideId, double? lat, double? lng}) =>
       post('/sos', {'ride_id': rideId, 'lat': lat, 'lng': lng});
 }

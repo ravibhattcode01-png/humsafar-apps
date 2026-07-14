@@ -11,6 +11,8 @@ import 'ride_screen.dart';
 import 'history_screen.dart';
 import 'wallet_screen.dart';
 import 'profile_screen.dart';
+import 'favourites_screen.dart';
+import 'referral_screen.dart';
 
 /// Rapido-style home:
 /// 1. GPS se pickup auto-set (asli address ke saath)
@@ -46,6 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _selectedVt;
   String _payment = 'cash';
   bool _loading = false;
+  final _promoCtrl = TextEditingController();
+  double _discount = 0;
+  String? _appliedPromo;
 
   @override
   void initState() {
@@ -243,6 +248,28 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.fromLTRB(40, 120, 40, 340)));
   }
 
+  Future<void> _applyPromo() async {
+    final code = _promoCtrl.text.trim();
+    if (code.isEmpty || _selectedVt == null) return;
+    final fare = (_fareOptions.firstWhere(
+            (o) => o['vehicle_type_id'] == _selectedVt)['total_fare'] as num)
+        .toDouble();
+    try {
+      final r = await Api.I.validatePromo(code, fare);
+      setState(() {
+        _discount = (r['discount'] as num).toDouble();
+        _appliedPromo = r['code'] as String;
+      });
+      _snack('Promo lag gaya! ₹${_discount.round()} ki chhoot 🎉');
+    } catch (e) {
+      setState(() {
+        _discount = 0;
+        _appliedPromo = null;
+      });
+      _snack(e.toString());
+    }
+  }
+
   Future<void> _book() async {
     if (_selectedVt == null) return;
     setState(() => _loading = true);
@@ -257,6 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'drop_lat': _drop!.latitude,
         'drop_lng': _drop!.longitude,
         'payment_method': _payment,
+        if (_appliedPromo != null) 'promo_code': _appliedPromo,
       });
       if (!mounted) return;
       final ride = data['ride'] as Map<String, dynamic>;
@@ -279,6 +307,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _fareOptions = [];
         _selectedVt = null;
         _stage = _Stage.idle;
+        _discount = 0;
+        _appliedPromo = null;
+        _promoCtrl.clear();
       });
 
   void _snack(String m) =>
@@ -426,17 +457,35 @@ class _HomeScreenState extends State<HomeScreen> {
             PopupMenuButton<String>(
               icon: const Icon(Icons.menu),
               itemBuilder: (_) => const [
+                PopupMenuItem(value: 'saved', child: Text('⭐  Saved Addresses')),
+                PopupMenuItem(value: 'referral', child: Text('🎁  Refer & Earn')),
                 PopupMenuItem(
                     value: 'history', child: Text('📜  Ride History')),
                 PopupMenuItem(value: 'wallet', child: Text('💰  Wallet')),
                 PopupMenuItem(value: 'profile', child: Text('👤  Profile')),
               ],
-              onSelected: (v) {
+              onSelected: (v) async {
+                if (v == 'saved') {
+                  final r = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => FavouritesScreen(near: _pickup)));
+                  if (r is PlaceResult) {
+                    setState(() {
+                      _drop = r.point;
+                      _dropAddr = r.name;
+                    });
+                    _maybeShowOptions();
+                  }
+                  return;
+                }
                 Widget page;
                 if (v == 'history') {
                   page = const HistoryScreen();
                 } else if (v == 'wallet') {
                   page = const WalletScreen();
+                } else if (v == 'referral') {
+                  page = const ReferralScreen();
                 } else {
                   page = const ProfileScreen();
                 }
@@ -590,6 +639,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               }),
+              const SizedBox(height: 6),
+              if (_appliedPromo == null)
+                Row(children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      child: TextField(
+                        controller: _promoCtrl,
+                        textCapitalization: TextCapitalization.characters,
+                        style: const TextStyle(fontSize: 13),
+                        decoration: const InputDecoration(
+                            hintText: 'Promo code (optional)',
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 40,
+                    child: OutlinedButton(
+                        onPressed: _applyPromo, child: const Text('Apply')),
+                  ),
+                ])
+              else
+                Row(children: [
+                  const Icon(Icons.local_offer, color: green, size: 16),
+                  const SizedBox(width: 6),
+                  Text('$_appliedPromo — ₹${_discount.round()} chhoot',
+                      style: const TextStyle(
+                          color: green, fontWeight: FontWeight.w600, fontSize: 13)),
+                  const Spacer(),
+                  TextButton(
+                      onPressed: () => setState(() {
+                            _appliedPromo = null;
+                            _discount = 0;
+                          }),
+                      child: const Text('Hatao', style: TextStyle(fontSize: 12))),
+                ]),
               const SizedBox(height: 6),
               Row(children: [
                 const Text('Payment:', style: TextStyle(fontSize: 13)),

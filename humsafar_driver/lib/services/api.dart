@@ -146,6 +146,13 @@ class Api {
 
   Future<Map<String, dynamic>> wallet() => get('/wallet');
 
+  Future<Map<String, dynamic>> incentives() => get('/driver/incentives');
+
+  Future<Map<String, dynamic>> referral() => get('/referral');
+
+  Future<Map<String, dynamic>> applyReferral(String code) =>
+      post('/referral/apply', {'code': code});
+
   Future<void> sos({int? rideId, double? lat, double? lng}) =>
       post('/sos', {'ride_id': rideId, 'lat': lat, 'lng': lng});
 }

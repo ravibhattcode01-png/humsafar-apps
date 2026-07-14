@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../config.dart';
 import '../services/api.dart';
 import '../services/geo_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RideScreen extends StatefulWidget {
   final Map<String, dynamic> ride;
@@ -152,6 +153,13 @@ class _RideScreenState extends State<RideScreen> {
     }
   }
 
+  Future<void> _callRider() async {
+    final phone = (_ride['user'] as Map<String, dynamic>?)?['phone']?.toString();
+    if (phone == null || phone.isEmpty) return;
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
   void _snack(String m) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
@@ -280,6 +288,14 @@ class _RideScreenState extends State<RideScreen> {
                                       color: Colors.black54)),
                             ]),
                       ),
+                      IconButton(
+                        onPressed: _callRider,
+                        icon: const Icon(Icons.call, color: green),
+                        style: IconButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(color: green)),
+                      ),
+                      const SizedBox(width: 4),
                       Text(
                           '₹${((_ride['estimated_fare']) as num).round()}',
                           style: const TextStyle(
